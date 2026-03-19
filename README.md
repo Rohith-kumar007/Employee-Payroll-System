@@ -208,7 +208,7 @@ Use:
 
 ## 👨‍💻 Author
 
-Rohith Kumar
+Rohith Kumar P
 
 ---
 
