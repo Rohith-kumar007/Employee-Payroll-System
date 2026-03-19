@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance - HR System</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+    <script src="assets/js/components.js"></script>
+    <script>renderSidebar();</script>
+
+    <div class="main-content">
+        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <div>
+                <h2>Attendance Logs</h2>
+                <p style="color: var(--text-secondary);">Track daily check-ins and absences.</p>
+            </div>
+            <!-- Employee Only Action -->
+            <button id="markBtn" class="btn-primary" style="width: auto; padding: 0.8rem 1.5rem; display: none;" onclick="markPresent()">✔️ Mark Present Today</button>
+        </header>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Employee Name</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceTableBody">
+                    <!-- Dynamic rows -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="assets/js/api.js"></script>
+    <script>
+        const role = localStorage.getItem('role');
+        const tableBody = document.getElementById('attendanceTableBody');
+        const markBtn = document.getElementById('markBtn');
+
+        if (role === 'EMPLOYEE') {
+            markBtn.style.display = 'block';
+        }
+
+        async function loadAttendance() {
+            try {
+                let records = [];
+                if (role === 'ADMIN') {
+                    records = await AdminAPI.getAttendance();
+                } else {
+                    records = await EmployeeAPI.getAttendance();
+                }
+
+                tableBody.innerHTML = records.map(rec => `
+                    <tr>
+                        <td>${rec.id}</td>
+                        <td>${rec.employeeName}</td>
+                        <td>${rec.date}</td>
+                        <td><span class="badge ${rec.status === 'PRESENT' ? 'badge-present' : 'badge-absent'}">${rec.status}</span></td>
+                    </tr>
+                `).join('');
+            } catch (err) { console.error(err); }
+        }
+
+        async function markPresent() {
+            try {
+                await EmployeeAPI.markAttendance({ status: 'PRESENT' });
+                alert('Attendance Marked for Today!');
+                loadAttendance();
+            } catch (err) { alert(err.message || 'Already marked or Error occurred'); }
+        }
+
+        loadAttendance();
+    </script>
+</body>
+</html>

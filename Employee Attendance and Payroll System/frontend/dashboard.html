@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - HR System</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+    <script src="assets/js/components.js"></script>
+    <script>renderSidebar();</script>
+
+    <div class="main-content">
+        <header style="margin-bottom: 2rem;">
+            <h2>Dashboard Overview</h2>
+            <p style="color: var(--text-secondary);">Welcome back, <span id="userName">User</span>!</p>
+        </header>
+
+        <!-- Admin View Cards -->
+        <div id="adminStats" class="dashboard-grid" style="display: none;">
+            <div class="stat-card">
+                <div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Total Employees</p>
+                    <h1 style="font-size: 2.5rem; margin-top: 0.5rem;" id="totalEmployees">-</h1>
+                </div>
+                <div style="background: rgba(67, 97, 238, 0.1); padding: 0.5rem; border-radius: 8px; width: fit-content; margin-top: 1rem;">👥</div>
+            </div>
+
+            <div class="stat-card">
+                <div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Attendance Logs</p>
+                    <h1 style="font-size: 2.5rem; margin-top: 0.5rem;" id="totalAttendance">-</h1>
+                </div>
+                <div style="background: rgba(16, 185, 129, 0.1); padding: 0.5rem; border-radius: 8px; width: fit-content; margin-top: 1rem;">✅</div>
+            </div>
+
+            <div class="stat-card">
+                <div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Leave Requests</p>
+                    <h1 style="font-size: 2.5rem; margin-top: 0.5rem;" id="totalLeaves">-</h1>
+                </div>
+                <div style="background: rgba(245, 158, 11, 0.1); padding: 0.5rem; border-radius: 8px; width: fit-content; margin-top: 1rem;">📄</div>
+            </div>
+        </div>
+
+        <!-- Employee View Cards -->
+        <div id="employeeStats" class="dashboard-grid" style="display: none;">
+            <div class="stat-card">
+                <div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">My Worked Days (Total)</p>
+                    <h1 style="font-size: 2.5rem; margin-top: 0.5rem;" id="myAttendance">-</h1>
+                </div>
+                <div style="background: rgba(16, 185, 129, 0.1); padding: 0.5rem; border-radius: 8px; width: fit-content; margin-top: 1rem;">📅</div>
+            </div>
+
+            <div class="stat-card">
+                <div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">My Leaves</p>
+                    <h1 style="font-size: 2.5rem; margin-top: 0.5rem;" id="myLeaves">-</h1>
+                </div>
+                <div style="background: rgba(245, 158, 11, 0.1); padding: 0.5rem; border-radius: 8px; width: fit-content; margin-top: 1rem;">🌴</div>
+            </div>
+            
+             <div class="stat-card">
+                <div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Base Salary</p>
+                    <h1 style="font-size: 2rem; margin-top: 0.5rem;" id="mySalary">$0.00</h1>
+                </div>
+                <div style="background: rgba(67, 97, 238, 0.1); padding: 0.5rem; border-radius: 8px; width: fit-content; margin-top: 1rem;">💰</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="assets/js/api.js"></script>
+    <script>
+        const role = localStorage.getItem('role');
+        const email = localStorage.getItem('email');
+        document.getElementById('userName').innerText = email;
+
+        async function loadDashboard() {
+            try {
+                if (role === 'ADMIN') {
+                    document.getElementById('adminStats').style.display = 'grid';
+                    
+                    const employees = await AdminAPI.getEmployees();
+                    const attendance = await AdminAPI.getAttendance();
+                    const leaves = await AdminAPI.getLeaves();
+
+                    document.getElementById('totalEmployees').innerText = employees.length;
+                    document.getElementById('totalAttendance').innerText = attendance.length;
+                    document.getElementById('totalLeaves').innerText = leaves.filter(l => l.status === 'PENDING').length;
+
+                } else {
+                    document.getElementById('employeeStats').style.display = 'grid';
+                    
+                    const attendance = await EmployeeAPI.getAttendance();
+                    const leaves = await EmployeeAPI.getLeaves();
+                    
+                    // Profile lookup for salary
+                    const profile = await AuthAPI.getProfile();
+
+                    document.getElementById('myAttendance').innerText = attendance.filter(a => a.status === 'PRESENT').length;
+                    document.getElementById('myLeaves').innerText = leaves.length;
+                    document.getElementById('mySalary').innerText = `$${profile.baseSalary || 0}`;
+                }
+            } catch (error) {
+                console.error('Loader error:', error);
+            }
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>
